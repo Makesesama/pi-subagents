@@ -916,6 +916,11 @@ export const ASYNC_DIR = path.join(TEMP_ROOT_DIR, "async-subagent-runs");
 export const CHAIN_RUNS_DIR = path.join(TEMP_ROOT_DIR, "chain-runs");
 export const TEMP_ARTIFACTS_DIR = path.join(TEMP_ROOT_DIR, "artifacts");
 export const WIDGET_KEY = "subagent-async";
+// Reserved widget key carrying a machine-readable JSON snapshot of live
+// subagent run state for structured RPC clients (e.g. the Emacs frontend).
+// The single widget line is a JSON string; the human-readable widget under
+// WIDGET_KEY is unaffected.
+export const STATE_WIDGET_KEY = "pi-subagents-state";
 export const SLASH_RESULT_TYPE = "subagent-slash-result";
 export const SLASH_SUBAGENT_REQUEST_EVENT = "subagent:slash:request";
 export const SLASH_SUBAGENT_STARTED_EVENT = "subagent:slash:started";

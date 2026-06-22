@@ -20,6 +20,7 @@ import {
 } from "../shared/types.ts";
 import { formatTokens, formatUsage, formatDuration, formatModelThinking, formatToolCall, shortenPath } from "../shared/formatters.ts";
 import { getDisplayItems, getSingleResultOutput } from "../shared/utils.ts";
+import { emitStateSnapshot } from "./state-snapshot.ts";
 import { flatToLogicalStepIndex } from "../runs/background/parallel-groups.ts";
 import { formatNestedAggregate } from "../runs/shared/nested-render.ts";
 import { aggregateStepStatus, formatActivityLabel, formatAgentRunningLabel, formatParallelOutcome } from "../shared/status-format.ts";
@@ -1001,12 +1002,24 @@ export function buildWidgetLines(jobs: AsyncJobState[], theme: Theme, width = ge
  * Render the async jobs widget
  */
 export function renderWidget(ctx: ExtensionContext, jobs: AsyncJobState[]): void {
+	// Always keep the structured RPC snapshot in sync with the human-readable
+	// widget, including the empty/clear case.
+	emitStateSnapshot(ctx, jobs);
 	if (jobs.length === 0) {
 		if (ctx.hasUI) ctx.ui.setWidget(WIDGET_KEY, undefined);
 		return;
 	}
 	if (!ctx.hasUI) return;
-	ctx.ui.setWidget(WIDGET_KEY, buildWidgetComponent(jobs, ctx.ui.getToolsExpanded?.() ?? false));
+	const expanded = ctx.ui.getToolsExpanded?.() ?? false;
+	if (ctx.mode === "rpc") {
+		const width = getTermWidth();
+		const lines = jobs.length === 1 && !expanded
+			? compactSingleWidgetLines(jobs[0]!, ctx.ui.theme, width)
+			: buildWidgetLines(jobs, ctx.ui.theme, width, expanded);
+		ctx.ui.setWidget(WIDGET_KEY, fitWidgetLineBudget(lines, ctx.ui.theme, width, expanded));
+		return;
+	}
+	ctx.ui.setWidget(WIDGET_KEY, buildWidgetComponent(jobs, expanded));
 }
 
 function renderSingleCompact(d: Details, r: Details["results"][number], theme: Theme): Component {

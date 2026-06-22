@@ -46,6 +46,7 @@ import {
 	SUBAGENT_ASYNC_COMPLETE_EVENT,
 	SUBAGENT_ASYNC_STARTED_EVENT,
 	SUBAGENT_CONTROL_EVENT,
+	STATE_WIDGET_KEY,
 	WIDGET_KEY,
 } from "../shared/types.ts";
 import {
@@ -565,6 +566,7 @@ DIAGNOSTICS:
 		try {
 			if (state.lastUiContext?.hasUI) {
 				state.lastUiContext.ui.setWidget(WIDGET_KEY, undefined);
+				state.lastUiContext.ui.setWidget(STATE_WIDGET_KEY, undefined);
 			}
 		} catch (error) {
 			if (!isStaleExtensionContextError(error)) throw error;

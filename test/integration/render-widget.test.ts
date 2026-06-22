@@ -30,10 +30,11 @@ function firstRunningGlyph(text: string): string {
 	return text.match(/[⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏●]/)?.[0] ?? "";
 }
 
-function createUiContext() {
+function createUiContext(mode = "tui") {
 	const widgets: unknown[] = [];
 	let renderRequests = 0;
 	const ctx = {
+		mode,
 		hasUI: true,
 		ui: {
 			theme,
@@ -123,6 +124,34 @@ describe("subagent async widget rendering", () => {
 		assert.match(text, /Press Ctrl\+O for live detail/);
 		assert.doesNotMatch(text, /widget truncated/);
 		assert.ok(lines.length <= 10, "collapsed component should stay under Pi's string-widget cap even though it bypasses it");
+	});
+
+	it("renders string-array widget lines in RPC mode", () => {
+		const now = Date.now();
+		const ui = createUiContext("rpc");
+		renderWidget(ui.ctx as never, [{
+			asyncId: "run-1",
+			asyncDir: "/tmp/1",
+			status: "running",
+			mode: "parallel",
+			agents: ["reviewer", "scout"],
+			activeParallelGroup: true,
+			runningSteps: 2,
+			completedSteps: 0,
+			stepsTotal: 2,
+			updatedAt: now,
+			steps: [
+				{ index: 0, agent: "reviewer", status: "running", lastActivityAt: now },
+				{ index: 1, agent: "scout", status: "running", currentTool: "read", currentToolStartedAt: now - 1000 },
+			],
+		}]);
+		const widget = ui.widgets.at(-1);
+		assert.ok(Array.isArray(widget), "RPC mode should install string-array widget lines");
+		const text = widget.join("\n");
+		assert.match(text, /async subagent parallel \(2\) · background/);
+		assert.match(text, /Agent 1\/2: reviewer · running/);
+		assert.match(text, /Agent 2\/2: scout · running/);
+		assert.equal(typeof widget, "object");
 	});
 
 	it("shows per-agent detail for active async parallel widget rows", () => {
